@@ -3,31 +3,31 @@ I2C.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000000  00800100  00800100  0000024e  2**0
+  0 .data         00000000  00800100  00800100  00000182  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         000001da  00000000  00000000  00000074  2**1
+  1 .text         0000010e  00000000  00000000  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .bss          000001ff  00800100  00800100  0000024e  2**0
+  2 .bss          00000200  00800100  00800100  00000182  2**0
                   ALLOC
-  3 .comment      00000030  00000000  00000000  0000024e  2**0
+  3 .comment      00000030  00000000  00000000  00000182  2**0
                   CONTENTS, READONLY
-  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000280  2**2
+  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  000001b4  2**2
                   CONTENTS, READONLY
-  5 .debug_aranges 00000060  00000000  00000000  000002c0  2**0
+  5 .debug_aranges 00000060  00000000  00000000  000001f4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00000924  00000000  00000000  00000320  2**0
+  6 .debug_info   00000971  00000000  00000000  00000254  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 000007b6  00000000  00000000  00000c44  2**0
+  7 .debug_abbrev 000007b6  00000000  00000000  00000bc5  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   0000041f  00000000  00000000  000013fa  2**0
+  8 .debug_line   0000044f  00000000  00000000  0000137b  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  000000a8  00000000  00000000  0000181c  2**2
+  9 .debug_frame  00000088  00000000  00000000  000017cc  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    000003f4  00000000  00000000  000018c4  2**0
+ 10 .debug_str    000003ff  00000000  00000000  00001854  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000132  00000000  00000000  00001cb8  2**0
+ 11 .debug_loc    0000011b  00000000  00000000  00001c53  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000040  00000000  00000000  00001dea  2**0
+ 12 .debug_ranges 00000040  00000000  00000000  00001d6e  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -57,7 +57,7 @@ Disassembly of section .text:
   54:	0c 94 46 00 	jmp	0x8c	; 0x8c <__bad_interrupt>
   58:	0c 94 46 00 	jmp	0x8c	; 0x8c <__bad_interrupt>
   5c:	0c 94 46 00 	jmp	0x8c	; 0x8c <__bad_interrupt>
-  60:	0c 94 5a 00 	jmp	0xb4	; 0xb4 <__vector_24>
+  60:	0c 94 46 00 	jmp	0x8c	; 0x8c <__bad_interrupt>
   64:	0c 94 46 00 	jmp	0x8c	; 0x8c <__bad_interrupt>
 
 00000068 <__ctors_end>:
@@ -69,7 +69,7 @@ Disassembly of section .text:
   72:	cd bf       	out	0x3d, r28	; 61
 
 00000074 <__do_clear_bss>:
-  74:	22 e0       	ldi	r18, 0x02	; 2
+  74:	23 e0       	ldi	r18, 0x03	; 3
   76:	a0 e0       	ldi	r26, 0x00	; 0
   78:	b1 e0       	ldi	r27, 0x01	; 1
   7a:	01 c0       	rjmp	.+2      	; 0x7e <.do_clear_bss_start>
@@ -78,266 +78,131 @@ Disassembly of section .text:
   7c:	1d 92       	st	X+, r1
 
 0000007e <.do_clear_bss_start>:
-  7e:	af 3f       	cpi	r26, 0xFF	; 255
+  7e:	a0 30       	cpi	r26, 0x00	; 0
   80:	b2 07       	cpc	r27, r18
   82:	e1 f7       	brne	.-8      	; 0x7c <.do_clear_bss_loop>
-  84:	0e 94 e8 00 	call	0x1d0	; 0x1d0 <main>
-  88:	0c 94 eb 00 	jmp	0x1d6	; 0x1d6 <_exit>
+  84:	0e 94 7c 00 	call	0xf8	; 0xf8 <main>
+  88:	0c 94 85 00 	jmp	0x10a	; 0x10a <_exit>
 
 0000008c <__bad_interrupt>:
   8c:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
 
 00000090 <init_I2C_as_slave>:
-}
 
-void stop_I2C(void)
+
+void init_I2C_as_slave(unsigned char address)
 {
-	// clear acknowledge and enable bits
-	TWCR &= ~( (1<<TWEA) | (1<<TWEN) );
+	// TWI Bit Rate Register
+	TWBR = 0x48; // 72 divider for standard 100kbps SCL
   90:	98 e4       	ldi	r25, 0x48	; 72
   92:	90 93 b8 00 	sts	0x00B8, r25	; 0x8000b8 <__TEXT_REGION_LENGTH__+0x7e00b8>
+	
+	// TWI Status Register
+	TWSR &= ~((1 << TWPS1) | (1 << TWPS0)); // prescaler 1 for standard 100kbps SCL
   96:	e9 eb       	ldi	r30, 0xB9	; 185
   98:	f0 e0       	ldi	r31, 0x00	; 0
   9a:	90 81       	ld	r25, Z
   9c:	9c 7f       	andi	r25, 0xFC	; 252
   9e:	90 83       	st	Z, r25
+	
+	// TWI (Slave) Address Register
+	TWAR = (address << 1) + 1; // load the 7bits address into the MSBs
   a0:	88 0f       	add	r24, r24
-  a2:	80 93 ba 00 	sts	0x00BA, r24	; 0x8000ba <__TEXT_REGION_LENGTH__+0x7e00ba>
-  a6:	ec eb       	ldi	r30, 0xBC	; 188
-  a8:	f0 e0       	ldi	r31, 0x00	; 0
-  aa:	80 81       	ld	r24, Z
-  ac:	85 6c       	ori	r24, 0xC5	; 197
-  ae:	80 83       	st	Z, r24
-  b0:	78 94       	sei
+  a2:	8f 5f       	subi	r24, 0xFF	; 255
+  a4:	80 93 ba 00 	sts	0x00BA, r24	; 0x8000ba <__TEXT_REGION_LENGTH__+0x7e00ba>
+	
+	// TWI Control Register
+	TWCR |= ((1<<TWINT) | (1<<TWEA) | (1<<TWEN) | (1<<TWIE)); // set TWI's Interrupt Flag, Enable Acknowledge, Enable and Interrupt Enable
+  a8:	ec eb       	ldi	r30, 0xBC	; 188
+  aa:	f0 e0       	ldi	r31, 0x00	; 0
+  ac:	80 81       	ld	r24, Z
+  ae:	85 6c       	ori	r24, 0xC5	; 197
+  b0:	80 83       	st	Z, r24
   b2:	08 95       	ret
 
-000000b4 <__vector_24>:
-}
-
-ISR(TWI_vect){
-  b4:	1f 92       	push	r1
-  b6:	0f 92       	push	r0
-  b8:	0f b6       	in	r0, 0x3f	; 63
-  ba:	0f 92       	push	r0
-  bc:	11 24       	eor	r1, r1
-  be:	8f 93       	push	r24
-  c0:	9f 93       	push	r25
-  c2:	ef 93       	push	r30
-  c4:	ff 93       	push	r31
-	
-	// temporary stores the received data
-	uint8_t data;
-	
-	// own address has been acknowledged
-	if( (TWSR & 0xF8) == TW_SR_SLA_ACK ){
-  c6:	80 91 b9 00 	lds	r24, 0x00B9	; 0x8000b9 <__TEXT_REGION_LENGTH__+0x7e00b9>
-  ca:	88 7f       	andi	r24, 0xF8	; 248
-  cc:	80 36       	cpi	r24, 0x60	; 96
-  ce:	61 f4       	brne	.+24     	; 0xe8 <__vector_24+0x34>
-		PORTB = ~PORTB;
-  d0:	85 b1       	in	r24, 0x05	; 5
-  d2:	80 95       	com	r24
-  d4:	85 b9       	out	0x05, r24	; 5
-		buffer_address = 0xFF;
-  d6:	8f ef       	ldi	r24, 0xFF	; 255
-  d8:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <_edata>
-		// clear TWI interrupt flag, prepare to receive next byte and acknowledge
-		TWCR |= (1<<TWIE) | (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
-  dc:	ec eb       	ldi	r30, 0xBC	; 188
-  de:	f0 e0       	ldi	r31, 0x00	; 0
-  e0:	80 81       	ld	r24, Z
-  e2:	85 6c       	ori	r24, 0xC5	; 197
-  e4:	80 83       	st	Z, r24
-  e6:	63 c0       	rjmp	.+198    	; 0x1ae <__vector_24+0xfa>
-	}
-	else if( (TWSR & 0xF8) == TW_SR_DATA_ACK ){ // data has been received in slave receiver mode
-  e8:	80 91 b9 00 	lds	r24, 0x00B9	; 0x8000b9 <__TEXT_REGION_LENGTH__+0x7e00b9>
-  ec:	88 7f       	andi	r24, 0xF8	; 248
-  ee:	80 38       	cpi	r24, 0x80	; 128
-  f0:	61 f5       	brne	.+88     	; 0x14a <__vector_24+0x96>
-		
-		// save the received byte inside data
-		data = TWDR;
-  f2:	90 91 bb 00 	lds	r25, 0x00BB	; 0x8000bb <__TEXT_REGION_LENGTH__+0x7e00bb>
-		
-		// check whether an address has already been transmitted or not
-		if(buffer_address == 0xFF){
-  f6:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
-  fa:	8f 3f       	cpi	r24, 0xFF	; 255
-  fc:	41 f4       	brne	.+16     	; 0x10e <__vector_24+0x5a>
-			
-			buffer_address = data;
-  fe:	90 93 00 01 	sts	0x0100, r25	; 0x800100 <_edata>
-			
-			// clear TWI interrupt flag, prepare to receive next byte and acknowledge
-			TWCR |= (1<<TWIE) | (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
- 102:	ec eb       	ldi	r30, 0xBC	; 188
- 104:	f0 e0       	ldi	r31, 0x00	; 0
- 106:	80 81       	ld	r24, Z
- 108:	85 6c       	ori	r24, 0xC5	; 197
- 10a:	80 83       	st	Z, r24
- 10c:	50 c0       	rjmp	.+160    	; 0x1ae <__vector_24+0xfa>
-		}
-		else{ // if a databyte has already been received
-			
-			// store the data at the current address
-			rxbuffer[buffer_address] = data;
- 10e:	e0 91 00 01 	lds	r30, 0x0100	; 0x800100 <_edata>
- 112:	f0 e0       	ldi	r31, 0x00	; 0
- 114:	e0 50       	subi	r30, 0x00	; 0
- 116:	fe 4f       	sbci	r31, 0xFE	; 254
- 118:	90 83       	st	Z, r25
-			
-			// increment the buffer address
-			buffer_address++;
- 11a:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
- 11e:	8f 5f       	subi	r24, 0xFF	; 255
- 120:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <_edata>
-			
-			// if there is still enough space inside the buffer
-			if(buffer_address < 0xFF){
- 124:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
- 128:	8f 3f       	cpi	r24, 0xFF	; 255
- 12a:	31 f0       	breq	.+12     	; 0x138 <__vector_24+0x84>
-				// clear TWI interrupt flag, prepare to receive next byte and acknowledge
-				TWCR |= (1<<TWIE) | (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
- 12c:	ec eb       	ldi	r30, 0xBC	; 188
- 12e:	f0 e0       	ldi	r31, 0x00	; 0
- 130:	80 81       	ld	r24, Z
- 132:	85 6c       	ori	r24, 0xC5	; 197
- 134:	80 83       	st	Z, r24
- 136:	3b c0       	rjmp	.+118    	; 0x1ae <__vector_24+0xfa>
-			}
-			else{
-				// Don't acknowledge
-				TWCR &= ~(1<<TWEA);
- 138:	ec eb       	ldi	r30, 0xBC	; 188
- 13a:	f0 e0       	ldi	r31, 0x00	; 0
- 13c:	80 81       	ld	r24, Z
- 13e:	8f 7b       	andi	r24, 0xBF	; 191
- 140:	80 83       	st	Z, r24
-				// clear TWI interrupt flag, prepare to receive last byte.
-				TWCR |= (1<<TWIE) | (1<<TWINT) | (1<<TWEN);
- 142:	80 81       	ld	r24, Z
- 144:	85 68       	ori	r24, 0x85	; 133
- 146:	80 83       	st	Z, r24
- 148:	32 c0       	rjmp	.+100    	; 0x1ae <__vector_24+0xfa>
-			}
-		}
-	}
-	else if( (TWSR & 0xF8) == TW_ST_DATA_ACK ){ // device has been addressed to be a transmitter
- 14a:	80 91 b9 00 	lds	r24, 0x00B9	; 0x8000b9 <__TEXT_REGION_LENGTH__+0x7e00b9>
- 14e:	88 7f       	andi	r24, 0xF8	; 248
- 150:	88 3b       	cpi	r24, 0xB8	; 184
- 152:	41 f5       	brne	.+80     	; 0x1a4 <__vector_24+0xf0>
-		
-		// copy data from TWDR to the temporary memory
-		data = TWDR;
- 154:	90 91 bb 00 	lds	r25, 0x00BB	; 0x8000bb <__TEXT_REGION_LENGTH__+0x7e00bb>
-		
-		// if no buffer read address has been sent yet
-		if( buffer_address == 0xFF ){
- 158:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
- 15c:	8f 3f       	cpi	r24, 0xFF	; 255
- 15e:	11 f4       	brne	.+4      	; 0x164 <__vector_24+0xb0>
-			buffer_address = data;
- 160:	90 93 00 01 	sts	0x0100, r25	; 0x800100 <_edata>
-		}
-		
-		// copy the specified buffer address into the TWDR register for transmission
-		TWDR = txbuffer[buffer_address];
- 164:	e0 91 00 01 	lds	r30, 0x0100	; 0x800100 <_edata>
- 168:	f0 e0       	ldi	r31, 0x00	; 0
- 16a:	ef 5f       	subi	r30, 0xFF	; 255
- 16c:	fe 4f       	sbci	r31, 0xFE	; 254
- 16e:	80 81       	ld	r24, Z
- 170:	80 93 bb 00 	sts	0x00BB, r24	; 0x8000bb <__TEXT_REGION_LENGTH__+0x7e00bb>
-		// increment buffer read address
-		buffer_address++;
- 174:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
- 178:	8f 5f       	subi	r24, 0xFF	; 255
- 17a:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <_edata>
-		
-		// if there is another buffer address that can be sent
-		if(buffer_address < 0xFF){
- 17e:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
- 182:	8f 3f       	cpi	r24, 0xFF	; 255
- 184:	31 f0       	breq	.+12     	; 0x192 <__vector_24+0xde>
-			// clear TWI interrupt flag, prepare to send next byte and receive acknowledge
-			TWCR |= (1<<TWIE) | (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
- 186:	ec eb       	ldi	r30, 0xBC	; 188
- 188:	f0 e0       	ldi	r31, 0x00	; 0
- 18a:	80 81       	ld	r24, Z
- 18c:	85 6c       	ori	r24, 0xC5	; 197
- 18e:	80 83       	st	Z, r24
- 190:	0e c0       	rjmp	.+28     	; 0x1ae <__vector_24+0xfa>
-		}
-		else{
-			// Don't acknowledge
-			TWCR &= ~(1<<TWEA);
- 192:	ec eb       	ldi	r30, 0xBC	; 188
- 194:	f0 e0       	ldi	r31, 0x00	; 0
- 196:	80 81       	ld	r24, Z
- 198:	8f 7b       	andi	r24, 0xBF	; 191
- 19a:	80 83       	st	Z, r24
-			// clear TWI interrupt flag, prepare to receive last byte.
-			TWCR |= (1<<TWIE) | (1<<TWINT) | (1<<TWEN);
- 19c:	80 81       	ld	r24, Z
- 19e:	85 68       	ori	r24, 0x85	; 133
- 1a0:	80 83       	st	Z, r24
- 1a2:	05 c0       	rjmp	.+10     	; 0x1ae <__vector_24+0xfa>
-		}
-		
-	}
-	else{
-		// if none of the above apply prepare TWI to be addressed again
-		TWCR |= (1<<TWIE) | (1<<TWEA) | (1<<TWEN);
- 1a4:	ec eb       	ldi	r30, 0xBC	; 188
- 1a6:	f0 e0       	ldi	r31, 0x00	; 0
- 1a8:	80 81       	ld	r24, Z
- 1aa:	85 64       	ori	r24, 0x45	; 69
- 1ac:	80 83       	st	Z, r24
-	}
- 1ae:	ff 91       	pop	r31
- 1b0:	ef 91       	pop	r30
- 1b2:	9f 91       	pop	r25
- 1b4:	8f 91       	pop	r24
- 1b6:	0f 90       	pop	r0
- 1b8:	0f be       	out	0x3f, r0	; 63
- 1ba:	0f 90       	pop	r0
- 1bc:	1f 90       	pop	r1
- 1be:	18 95       	reti
-
-000001c0 <init_uC>:
+000000b4 <init_uC>:
 }
 
 void init_uC(void)
 {
 	
 	DDRB = 0xFF; //PORTB output
- 1c0:	8f ef       	ldi	r24, 0xFF	; 255
- 1c2:	84 b9       	out	0x04, r24	; 4
+  b4:	8f ef       	ldi	r24, 0xFF	; 255
+  b6:	84 b9       	out	0x04, r24	; 4
 	PORTB = 1 << BUILTIN_LED;
- 1c4:	80 e2       	ldi	r24, 0x20	; 32
- 1c6:	85 b9       	out	0x05, r24	; 5
+  b8:	80 e2       	ldi	r24, 0x20	; 32
+  ba:	85 b9       	out	0x05, r24	; 5
 	
+	TEST_BLINK = TRUE;
+  bc:	81 e0       	ldi	r24, 0x01	; 1
+  be:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <_edata>
 	init_I2C_as_slave(ADDRESS);
- 1c8:	83 e1       	ldi	r24, 0x13	; 19
- 1ca:	0e 94 48 00 	call	0x90	; 0x90 <init_I2C_as_slave>
- 1ce:	08 95       	ret
+  c2:	83 e1       	ldi	r24, 0x13	; 19
+  c4:	0e 94 48 00 	call	0x90	; 0x90 <init_I2C_as_slave>
+	
+	sei(); // enable global interrupts
+  c8:	78 94       	sei
+  ca:	08 95       	ret
 
-000001d0 <main>:
+000000cc <led_blink>:
+}
+
+void led_blink(void)
+{
+	PORTB &= ~(1 << BUILTIN_LED);
+  cc:	2d 98       	cbi	0x05, 5	; 5
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+  ce:	2f ef       	ldi	r18, 0xFF	; 255
+  d0:	80 e7       	ldi	r24, 0x70	; 112
+  d2:	92 e0       	ldi	r25, 0x02	; 2
+  d4:	21 50       	subi	r18, 0x01	; 1
+  d6:	80 40       	sbci	r24, 0x00	; 0
+  d8:	90 40       	sbci	r25, 0x00	; 0
+  da:	e1 f7       	brne	.-8      	; 0xd4 <led_blink+0x8>
+  dc:	00 c0       	rjmp	.+0      	; 0xde <led_blink+0x12>
+  de:	00 00       	nop
+	_delay_ms(50);
+	PORTB = 1 << BUILTIN_LED;
+  e0:	80 e2       	ldi	r24, 0x20	; 32
+  e2:	85 b9       	out	0x05, r24	; 5
+  e4:	2f ef       	ldi	r18, 0xFF	; 255
+  e6:	82 e5       	ldi	r24, 0x52	; 82
+  e8:	97 e0       	ldi	r25, 0x07	; 7
+  ea:	21 50       	subi	r18, 0x01	; 1
+  ec:	80 40       	sbci	r24, 0x00	; 0
+  ee:	90 40       	sbci	r25, 0x00	; 0
+  f0:	e1 f7       	brne	.-8      	; 0xea <led_blink+0x1e>
+  f2:	00 c0       	rjmp	.+0      	; 0xf4 <led_blink+0x28>
+  f4:	00 00       	nop
+  f6:	08 95       	ret
+
+000000f8 <main>:
 void init_uC(void);
 void led_blink(void);
 
 int main(void)
 {
 	init_uC();
- 1d0:	0e 94 e0 00 	call	0x1c0	; 0x1c0 <init_uC>
- 1d4:	ff cf       	rjmp	.-2      	; 0x1d4 <main+0x4>
+  f8:	0e 94 5a 00 	call	0xb4	; 0xb4 <init_uC>
+	
+    while (1) 
+    {
+		if(TEST_BLINK)
+  fc:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
+ 100:	88 23       	and	r24, r24
+ 102:	f1 f3       	breq	.-4      	; 0x100 <main+0x8>
+		{
+			led_blink();	
+ 104:	0e 94 66 00 	call	0xcc	; 0xcc <led_blink>
+ 108:	f9 cf       	rjmp	.-14     	; 0xfc <main+0x4>
 
-000001d6 <_exit>:
- 1d6:	f8 94       	cli
+0000010a <_exit>:
+ 10a:	f8 94       	cli
 
-000001d8 <__stop_program>:
- 1d8:	ff cf       	rjmp	.-2      	; 0x1d8 <__stop_program>
+0000010c <__stop_program>:
+ 10c:	ff cf       	rjmp	.-2      	; 0x10c <__stop_program>
